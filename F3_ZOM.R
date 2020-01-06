@@ -63,7 +63,7 @@ F3_ZOM <- function(n.sim = 1, n, data.type, dat, test.dat, estimator){
   #### Summarize results and estimator value function ####
   tmpU <- tmp.list[,,,1] %>% reshape2::melt() %>% mutate(estimator = "jackknife", which.Z = "Ui") 
   tmpW <- tmp.list[,,,2] %>% reshape2::melt() %>% mutate(estimator = "jackknife", which.Z = "Wi")
-  if (ncol(tmpU) == 5){
+  if (ncol(tmpU) < 6){
     tmpU %<>% mutate(sim = 1) %>% select(sim, everything())
     tmpW %<>% mutate(sim = 1) %>% select(sim, everything())
   } 

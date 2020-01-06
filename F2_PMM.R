@@ -56,6 +56,8 @@ F2_PMM <- function(n.sim = 1, n, data.type, models, dat, test.dat, estimator, nu
   
   tt(1)
   
+  ds <- NULL
+  
   ##################################
   #### Apply PMM with Jackknife ####
   ##################################
@@ -108,6 +110,18 @@ F2_PMM <- function(n.sim = 1, n, data.type, models, dat, test.dat, estimator, nu
       tmp.list[i,,j,2] <- combined$W
       tmp.list[i,,j,3] <- combined$A
 
+      #### Summarize results and calculate value function ####
+      tmpU <- tmp.list[i,,j,1] %>% reshape2::melt() %>% 
+        rownames_to_column(var = "test.n") %>% 
+        mutate(sim = i, model = model.fullname, estimator = estimator, which.Z = "Ui") %>% 
+        select(sim, test.n, model, value, estimator, which.Z)
+      tmpW <- tmp.list[i,,j,2] %>% reshape2::melt() %>% 
+        rownames_to_column(var = "test.n") %>% 
+        mutate(sim = i, model = model.fullname, estimator = estimator, which.Z = "Wi") %>% 
+        select(sim, test.n, model, value, estimator, which.Z)
+      each.ds <- rbind(tmpU, tmpW)
+      
+      ds <- rbind(ds, each.ds)
     }#j loop for models
   }#i loop for partitioned simulations
   
@@ -116,40 +130,17 @@ F2_PMM <- function(n.sim = 1, n, data.type, models, dat, test.dat, estimator, nu
   value.object$W = tmp.list[,,,2] # n.sim x n x n.models
   value.object$A = tmp.list[,,,3] # n.sim x n x n.models
   
-  tt(2)
+  tt(2) %>% print()
   
-  #### Summarize results and calculate value function ####
-  tmpU <- value.object$U %>% melt() %>% mutate(estimator = "jackknife", which.Z = "Ui")
-  tmpW <- value.object$W %>% melt() %>% mutate(estimator = "jackknife", which.Z = "Wi")
-  if (ncol(tmpU) == 5){
-    tmpU %<>% mutate(sim = 1) %>% select(sim, everything())
-    tmpW %<>% mutate(sim = 1) %>% select(sim, everything())
-  } 
-  colnames(tmpU) <- c("sim", "test.n", "model", "value", "estimator", "which.Z")
-  colnames(tmpW) <- c("sim", "test.n", "model", "value", "estimator", "which.Z")
-  ds <- rbind(tmpU, tmpW)
-  ds$test.n <- as.integer(sub(pattern = "test.jk", replacement = "", x = ds$test.n))
-  stopifnot(n.sim == length(unique(ds$sim)))
-  
-  tmpU <- tmp.list[,,,1] %>% reshape2::melt() %>% mutate(estimator = "jackknife", which.Z = "Ui") 
-  tmpW <- tmp.list[,,,2] %>% reshape2::melt() %>% mutate(estimator = "jackknife", which.Z = "Wi")
-  if (ncol(tmpU) == 5){
-    tmpU %<>% mutate(sim = 1) %>% select(sim, everything())
-    tmpW %<>% mutate(sim = 1) %>% select(sim, everything())
-  } 
-  colnames(tmpU) <- c("sim", "test.n", "model", "value", "estimator", "which.Z")
-  colnames(tmpW) <- c("sim", "test.n", "model", "value", "estimator", "which.Z")
-  ds <- rbind(tmpU, tmpW)
+  #### Variance of the jackknife estimator (across J)
   ds$test.n <- as.integer(sub(pattern = "test.jk", replacement = "", x = ds$test.n))
   stopifnot(n.sim == length(unique(ds$sim)))
   stopifnot(nrow(ds) == n.models * n * 2)
-  
   n.sims.obv <- length(unique(ds$sim))
   
-  #### Variance of the jackknife estimator (across J)
   # First take the mean across J, i.e. n samples and simulations, for each model, estimator, & Z component
   mu <- ds %>% 
-    filter(model %in% models) %>% 
+    filter(model %in% models) %>%
     group_by(model, estimator, which.Z) %>% 
     summarise(mean = mean(value, na.rm = T)) %>% 
     spread(which.Z, mean) %>% rename(Ubar = Ui, Wbar = Wi) 

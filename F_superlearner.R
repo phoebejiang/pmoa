@@ -247,10 +247,10 @@ obj.function = function(type, alpha, outcome, pred.files, k, prop_scores){
 
 
 # super learning function to get preds using SL (min_mse), to be fed into modified_list_dtr
-Super_Learning = function(type, dat, num_rep, num_folds, num_trt, remove_ids, seed = 2019, n.try, n.pick, plot = FALSE){
+Super_Learning = function(type, dat, num_reps, num_folds, num_trt, remove_ids, seed = 2019, n.try, n.pick, plot = FALSE){
   
   #' @param type if "max_value", objective function is value function; if "min_mse", objective function is mse loss of prediction
-  #' @param num_rep number of repetition of cross validations
+  #' @param num_reps number of repetition of cross validations
   #' @param remove_ids if not using the whole input data (i.e., one id if jk, a list of ids if cv)
   #' @param dat original dataset
   #' @param n.try randomly generate n.try alpha

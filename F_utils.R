@@ -222,10 +222,10 @@ runRWL <- function(data, x.train, outcome_name, group_name, vars, kernel){
   # Create modelObj object for main effect component
   moMain <- buildModelObj(model = RWL.formula, solver.method = 'lm')
   
-  if (kernel == "radial"){
+  if (kernel == "poly2"){
     rwlRes <- rwl(moPropen = moPropen, moMain = moMain,
                   data = data, reward = outcome_name, txName = group_name,
-                  kernel = "radial", cvFolds = 4L, kparam = 2^(seq(-10,6,2)), lambdas = 2^(seq(-10,6,2)),
+                  kernel = "poly", cvFolds = 0L, kparam = 2, lambdas = 2,
                   regime = RWL.formula, verbose = F)
   } 
   if (kernel == "linear"){
