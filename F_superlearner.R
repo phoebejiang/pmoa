@@ -140,7 +140,7 @@ BART <- function(outcome, x.train, x.test, dat.train, dat.test){
                     x.test = x.test.new, 
                     nskip = 500L, ndpost = 5000L, ntree = 500L) 
   # nskip is number of MCMC draws to burn in, ndpost is number of MCMC samples to keep, 
-  # default settings gave always-2 and always-3 models, so trying different options (increased nskip, ndpost, ntree)
+  # default settings sometimes gave always-2 and always-3 models, so trying different options (increased nskip, ndpost, ntree)
   
   # Find the BART ITR for test set
   N <- nrow(x.test)
@@ -259,9 +259,9 @@ Super_Learning = function(type, dat, num_reps, num_folds, num_trt, remove_ids, s
   
   library(caret)
   
-  # Base learners 
+  # Base learners (can modify this to make it user specified)
   base.learners <- c("bart", "elastic_net", "krr", "lasso", "rf", "ridge", "rlt")
-  
+   
   ## Calculate cross validated value functions from all base learners ##
   dat %<>% mutate(pid = 1:nrow(dat))
   cvpred.files <- list()
