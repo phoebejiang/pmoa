@@ -3,3 +3,5 @@ A precision medicine approach to develop and validate optimal exericse and weigh
 
 Jiang et al. 2020
 Submitted to Arthritis Care and Research
+
+Run main.R for simulation results. High-performance computing is strongly recommended if candidate models include BART, RLT, or super learning.
