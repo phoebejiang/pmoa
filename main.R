@@ -18,16 +18,16 @@ source("./F4_PMM_vs_ZOM.R")
 
 ## User-specified constants
 n = 200
-data.type = "circle"
+data.type = "circle"            # other options are "line", "quadratic", or "steps"
 num_rep = 10
 num_folds = 5
 n.try = 1000
 n.pick = 10
 estimator = "jackknife"
-size.rule <- c(2L, 3L, 5L, 10L)       # number of list nodes 
+size.rule <- c(2L, 3L, 5L, 10L)  # number of list nodes; see maxlen in the listdtr function of the listdtr package
 
 args <- commandArgs(trailingOnly = TRUE)
-models <- args[1]
+models <- args[1] # see readme; could be a vector of strings or just one string
 
 ## Step 1. Generate simulation data
 cat("\n##########################\n")
