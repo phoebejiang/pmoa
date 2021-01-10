@@ -24,16 +24,19 @@ num_folds = 5
 n.try = 1000
 n.pick = 10
 estimator = "jackknife"
-size.rule <- c(2L, 3L, 5L, 10L)  # number of list nodes; see maxlen in the listdtr function of the listdtr package
+size.rule <- c(2L, 3L, 5L, 10L)       # number of list nodes 
+n.sim = 1                             # default: 1
+cat("\nNumber of simulations:", n.sim, "\n")
 
 args <- commandArgs(trailingOnly = TRUE)
 models <- args[1] # see readme; could be a vector of strings or just one string
+print(models)
 
 ## Step 1. Generate simulation data
 cat("\n##########################\n")
 cat("1. Generate Simulation Data")
 cat("\n##########################\n")
-f1.list <- F1_genSimData(n.sim = 1, n = n, data.type = data.type)
+f1.list <- F1_genSimData(n.sim = n.sim, n = n, data.type = data.type)
 dat <- f1.list[[1]]
 test.dat <- f1.list[[2]]
 
@@ -41,9 +44,9 @@ test.dat <- f1.list[[2]]
 cat("\n##########################\n")
 cat("2. Fit PMM with Jackknife")
 cat("\n##########################\n")
-f2.list <- F2_PMM(n.sim = 1, n = n, data.type = data.type, models = models,
-                       dat = dat, test.dat = test.dat, estimator = estimator, 
-                       num_rep = num_rep, num_folds = num_folds, n.try = n.try, n.pick = n.pick)
+f2.list <- F2_PMM(n.sim = n.sim, n = n, data.type = data.type, models = models,
+                  dat = dat, test.dat = test.dat, estimator = estimator, 
+                  num_rep = num_rep, num_folds = num_folds, n.try = n.try, n.pick = n.pick)
 UW.pmm <- f2.list[[1]]
 mean_var.pmm <- f2.list[[2]]
 print(mean_var.pmm)
@@ -52,7 +55,7 @@ print(mean_var.pmm)
 cat("\n##########################\n")
 cat("3. Fit ZOM")
 cat("\n##########################\n")
-f3.list <- F3_ZOM(n.sim = 1, n = n, data.type = data.type, dat = dat, test.dat = test.dat, estimator = estimator)
+f3.list <- F3_ZOM(n.sim = n.sim, n = n, data.type = data.type, dat = dat, test.dat = test.dat, estimator = estimator)
 UW.zom <- f3.list[[1]]
 mean_var.zom <- f3.list[[2]]
 print(mean_var.zom)
@@ -66,7 +69,7 @@ print(test.result)
 
 ## Step 5. Determine optimal decision rule 
 cat("\n##########################\n")
-cat("5. Determine Optimal Decision Rule")
+cat("5. Determine Final Optimal Decision Rule from Each Dataset (optional for simulations)")
 cat("\n##########################\n")
 
 optPMM <- test.result$optimalPMM
@@ -87,10 +90,15 @@ if ((Q.model == "sl") & !is.na(Q.model)){sl.bundle = list(dat, num_rep, num_fold
 
 which_wl <- str_split(optPMM, "-")[[1]][2]
 
-train.mod <- Training(data = dat, 
-         model = model, 
-         size = ifelse(!is.na(node), as.integer(node), NA), 
-         kernel = ifelse(!is.na(which_wl), which_wl, NA), 
-         Q.model = Q.model, sl.bundle = sl.bundle)
-  
-saveRDS(train.mod, paste0("./optimal_PMM_trained_", today(), ".rds"))
+# One rule per dataset
+training.list <- function(x){
+             Training(data = x, 
+                      model = model, 
+                      size = ifelse(!is.na(node), as.integer(node), NA), 
+                      kernel = ifelse(!is.na(which_wl), which_wl, NA), 
+                      Q.model = Q.model, sl.bundle = sl.bundle)
+}
+train.mods <- lapply(dat, training.list)
+
+saveRDS(train.mods, paste0("./optimal_PMM_trained_", data.type, "_nsims", n.sim, "_", today(), ".rds"))
+

@@ -19,9 +19,13 @@ F3_ZOM <- function(n.sim = 1, n, data.type, dat, test.dat, estimator){
   #' @return ds, data.frame, long version of tmp.list, an array of ZOM results, dimension n.sim x n x n.models x 2 (U,W)
   #' @return mean_var, data.frame of n.models x 7 (cols = model, estimator, variance, mean, V, n, n.sim)
  
-  models <- paste0("zero_order", unique(dat$a))
+  if(class(dat) == "list") {
+    models <- paste0("zero_order", sort(unique(dat[[1]]$a)))
+  } else {
+    paste0("zero_order", sort(unique(dat$a)))
+  }
   n.models = length(models) 
-  
+
   #### Create empty shells ####
   # ZOM U's and W's
   tmp.list = array(NA, c(n.sim, n, length(models), 2),
@@ -30,6 +34,7 @@ F3_ZOM <- function(n.sim = 1, n, data.type, dat, test.dat, estimator){
                                    models,
                                    c("Ui", "Wi")))
   # n.sim x n x n.models x 2 (U or W)
+  ds <- NULL 
   
   #### Get estimated value functions (Ui, Wi, Zi) ####
   ## Loop through all n.sims in each partition
@@ -41,7 +46,7 @@ F3_ZOM <- function(n.sim = 1, n, data.type, dat, test.dat, estimator){
       data = dat
       test.data = test.dat
     }
-    cat("Estimator:", estimator, "\n")
+    cat("Simulation: No.", i, "Estimator:", estimator, "\n")
     
     ### Loop through all ZOMs
     for (m in 1:length(models)){
@@ -57,21 +62,32 @@ F3_ZOM <- function(n.sim = 1, n, data.type, dat, test.dat, estimator){
       tmp.list[i,,m,1] <- combined$U
       tmp.list[i,,m,2] <- combined$W
       
+      #### Summarize results and estimator value function ####
+      tmpU <- tmp.list[i,,m,1] %>% reshape2::melt() %>% 
+        rownames_to_column(var = "test.n") %>% 
+        mutate(estimator = "jackknife", 
+               which.Z = "Ui",
+               sim = i,
+               model = model) %>% 
+        select(sim, test.n, model, value, estimator, which.Z)
+      tmpW <- tmp.list[i,,m,2] %>% reshape2::melt() %>% 
+        rownames_to_column(var = "test.n") %>% 
+        mutate(estimator = "jackknife", 
+               which.Z = "Wi",
+               sim = i,
+               model = model) %>% 
+        select(sim, test.n, model, value, estimator, which.Z)
+      
+      each.ds <- rbind(tmpU, tmpW)
+      ds <- rbind(ds, each.ds)
+      # ds$test.n <- as.integer(sub(pattern = "test.jk", replacement = "", x = ds$test.n))
+      
     }#m loop through ZOMs
   }#i loop though n.sim
   
-  #### Summarize results and estimator value function ####
-  tmpU <- tmp.list[,,,1] %>% reshape2::melt() %>% mutate(estimator = "jackknife", which.Z = "Ui") 
-  tmpW <- tmp.list[,,,2] %>% reshape2::melt() %>% mutate(estimator = "jackknife", which.Z = "Wi")
-  if (ncol(tmpU) < 6){
-    tmpU %<>% mutate(sim = 1) %>% select(sim, everything())
-    tmpW %<>% mutate(sim = 1) %>% select(sim, everything())
-  } 
-  colnames(tmpU) <- c("sim", "test.n", "model", "value", "estimator", "which.Z")
-  colnames(tmpW) <- c("sim", "test.n", "model", "value", "estimator", "which.Z")
-  ds <- rbind(tmpU, tmpW)
-  ds$test.n <- as.integer(sub(pattern = "test.jk", replacement = "", x = ds$test.n))
   stopifnot(n.sim == length(unique(ds$sim)))
+  cat("\nn.models", n.models, "n", n, "ds.shape", nrow(ds), ncol(ds), "\n")
+  stopifnot(nrow(ds) == n.models * n * 2 * n.sim)
   
   #### Variance of the jackknife estimator (across J) ####
   # First take the mean across J, i.e. n samples and simulations, for each model, estimator, & Z component

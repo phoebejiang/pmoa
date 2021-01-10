@@ -6,7 +6,7 @@ This repository provides example code for readers to run and test the pipeline d
 
 Run `main.R` and pass the argument `models` with the following values such as `elastic_net, lasso, ridge, krr, list.5, list5+rf, list5+en, list5+sl, rf, rlt, bart, rwl-poly2, rwl-poly3, rwl-radial`. The number of node in list-based models, 5, could be replaced by any reasonable integer (usually between 2 and 10). 
 
-High-performance computing is strongly recommended if candidate models include Bayesian additive regression trees (BART), reinforcement learning tree (RLT), or super learning (SL). 
+High-performance computing and parallel programming is strongly recommended if candidate models include Bayesian additive regression trees (BART), reinforcement learning tree (RLT), or super learning (SL). 
 
 ## Related Publications
 

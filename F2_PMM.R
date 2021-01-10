@@ -71,7 +71,7 @@ F2_PMM <- function(n.sim = 1, n, data.type, models, dat, test.dat, estimator, nu
       data = dat
       test.data = test.dat
     }
-    cat("Estimator:", estimator, "\n")
+    cat("Simulation: No.", i, "Estimator:", estimator, "\n")
     
     for (j in 1:length(models)){
       model.fullname <- models[j]
@@ -135,7 +135,8 @@ F2_PMM <- function(n.sim = 1, n, data.type, models, dat, test.dat, estimator, nu
   #### Variance of the jackknife estimator (across J)
   ds$test.n <- as.integer(sub(pattern = "test.jk", replacement = "", x = ds$test.n))
   stopifnot(n.sim == length(unique(ds$sim)))
-  stopifnot(nrow(ds) == n.models * n * 2)
+  cat("\nn.models", n.models, "n", n, "ds.shape", nrow(ds), ncol(ds), "\n")
+  stopifnot(nrow(ds) == n.models * n * 2 * n.sim)
   n.sims.obv <- length(unique(ds$sim))
   
   # First take the mean across J, i.e. n samples and simulations, for each model, estimator, & Z component
@@ -191,7 +192,7 @@ F2_PMM <- function(n.sim = 1, n, data.type, models, dat, test.dat, estimator, nu
     mutate(n = n, sims = n.sim, sims.obv = n.sims.obv, data.type = data.type) 
   # means should be 0 or very close to 0
   # V is value function summed across all J; 
-  # values in data3 are summarized by simulations first; 
+  # values are summarized by simulations first; 
   # close but a bit different
   
   return(list(ds, mean_var))
